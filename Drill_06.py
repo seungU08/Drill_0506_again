@@ -34,6 +34,7 @@ def reset_world():
     global mx, my
     global points
 
+
     mx, my = 0,0
     running = True
     cx, cy = TUK_WIDTH // 2, TUK_HEIGHT // 2
@@ -48,14 +49,20 @@ def set_new_target_arrow():
     global sx, sy, hx, hy, t
     global action
     global frame
-    sx, sy = cx, cy  # p1 : 시작점
-    hx, hy = points[0]  # p2 : 끝점
-    # hx,hy = 100 , 100
-    t = 0.0
-    action = 1 if sx < hx else 0
-    frame = 0
+    global target_exists
 
-
+    if points: #points 리스트 안에 남아있는 점이 있으면
+        sx, sy = cx, cy  # p1 : 시작점
+        hx, hy = points[0]  # p2 : 끝점
+        # hx,hy = 100 , 100
+        t = 0.0
+        action = 1 if sx < hx else 0
+        frame = 0
+        target_exists = True
+    else:
+        action = 3 if action == 1 else 2  # 이전에 소년이 우측으로 이동중이었으면 소년이 IDLE 동작시 우측을 바라보도록
+        frame = 0
+        target_exists = False
 def render_world():
     clear_canvas()
     TUK_ground.draw(TUK_WIDTH // 2, TUK_HEIGHT // 2)
@@ -70,16 +77,19 @@ def update_world():
     global frame
     global cx, cy
     global t
+    global target_exists
 
     frame = (frame + 1) % 8
+    if target_exists:
+        if t <= 1.0:
+            cx = (1 - t) * sx + t * hx  # cx는 시작x 끝x를 1-t:t로 섞은 위치
+            cy = (1 - t) * sy + t * hy
+            t += 0.005
+        else: # 목표지점에 도달하면
+            cx, cy = hx, hy #캐릭터 위치를 목적지 위치와 강제로 정확히 일치시킴.
+            del points[0] # 목표지점에 왔기때문에, 더이상 필요없는 점을 삭제
+            set_new_target_arrow()
 
-    if t <= 1.0:
-        cx = (1 - t) * sx + t * hx  # cx는 시작x 끝x를 1-t:t로 섞은 위치
-        cy = (1 - t) * sy + t * hy
-        t += 0.005
-    else:
-        cx, cy = hx, hy #캐릭터 위치를 목적지 위치와 강제로 정확히 일치시킴.
-        set_new_target_arrow()
 
 
 open_canvas(TUK_WIDTH, TUK_HEIGHT)
